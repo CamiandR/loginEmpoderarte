@@ -1,8 +1,8 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import { ghPages } from 'vite-plugin-gh-pages'
+// vite.config.js
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
 
 export default defineConfig({
-  base: '/NOMBRE-DEL-REPO/', // 👈 cambia esto por el nombre real del repo
-  plugins: [react(), ghPages()]
-})
+  plugins: [react()],
+  base: '/empoderarte-educativa/', // Usa el nombre de tu repo
+});
