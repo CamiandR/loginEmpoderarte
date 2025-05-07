@@ -4,5 +4,5 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [react()],
-  base: '/empoderarte-educativa/', // Usa el nombre de tu repo
+  base: '/loginEmpoderarte/', // Nombre del repo
 });

@@ -1,752 +1,667 @@
-import React, { useState, useEffect } from 'react';
-import { Bell, Book, Award, Layout, MessageCircle, User, ChevronRight, Star, Heart, Calendar, MapPin, Shield, Brain, Compass } from 'lucide-react';
+import React, { useState } from 'react';
+import { Heart, Eye, EyeOff, Star, User, Mail, Lock, ArrowRight, ArrowLeft, ChevronRight } from 'lucide-react';
 
-const PlataformaEducativa = () => {
-  // Estados para controlar la interfaz
-  const [seccionActual, setSeccionActual] = useState('zona-aprendizaje');
-  const [perfilDrawer, setPerfilDrawer] = useState(false);
-  const [notificaciones, setNotificaciones] = useState(3);
-  const [mostrarCodigoModal, setMostrarCodigoModal] = useState(false);
-  const [codigoInput, setCodigoInput] = useState('');
+const PandoraLogin = () => {
+  const [activeTab, setActiveTab] = useState('login');
+  const [stage, setStage] = useState('welcome');
+  const [passwordVisible, setPasswordVisible] = useState(false);
+  const [pageEffect, setPageEffect] = useState(false);
   
-  // Datos de usuario
-  const [usuario, setUsuario] = useState({
-    nombre: 'Camila',
-    avatar: '👧🏽',
-    nivel: 2,
-    puntos: 145,
-    insignias: 3,
-    progreso: 35
+  // Datos del formulario inic
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+    name: '',
+    username: '',
+    confirmPassword: '',
+    resetEmail: ''
   });
   
-  // Datos del curso
-  const cursos = [
-    {
-      id: 1,
-      capitulo: 'Capítulo 1',
-      titulo: 'Estereotipos y Redes Sociales',
-      imagen: '/api/placeholder/300/180',
-      descripcion: 'Descubre y desafía los estereotipos de género en las redes sociales',
-      progreso: 75,
-      actividadesPendientes: 1,
-      icono: '🌟'
-    },
-    {
-      id: 2,
-      capitulo: 'Capítulo 2',
-      titulo: 'Inteligencia Emocional y Menstruación',
-      imagen: '/api/placeholder/300/180',
-      descripcion: 'Comprende las emociones durante tu ciclo menstrual',
-      progreso: 40,
-      actividadesPendientes: 2,
-      icono: '❣️'
-    },
-    {
-      id: 3,
-      capitulo: 'Capítulo 3',
-      titulo: 'Salud Menstrual y Hormonas',
-      imagen: '/api/placeholder/300/180',
-      descripcion: 'Conoce tu ciclo hormonal y cómo afecta tu cuerpo',
-      progreso: 10,
-      actividadesPendientes: 3,
-      icono: '🌱'
-    }
-  ];
+  // Configuración del avatar
+  const [avatarConfig, setAvatarConfig] = useState({
+    skinColor: '#f5d0ba',
+    hairColor: '#4a2b13',
+    eyeColor: '#72482e',
+    accessory: 'glasses',
+    background: '#ff69b4'
+  });
   
-  // Retos activos
-  const retos = [
-    {
-      id: 1,
-      titulo: 'Desafía el Estereotipo',
-      descripcion: 'Identifica 3 mensajes negativos en redes sociales y crea alternativas positivas',
-      puntos: 50,
-      tiempo: '3 días',
-      completado: false
-    },
-    {
-      id: 2,
-      titulo: 'Diario Emocional',
-      descripcion: 'Completa 7 días de registro en tu diario emocional',
-      puntos: 75,
-      tiempo: '7 días',
-      completado: false
-    }
-  ];
+  // Validación de errores
+  const [errors, setErrors] = useState({});
+
+  // Opciones de colores de piel
+  const skinColors = ['#f5d0ba', '#e8b998', '#c68642', '#8d5524', '#332218', '#fee3d4'];
   
-  // Premios disponibles
-  const premios = [
-    {
-      id: 1,
-      nombre: 'Kit Menstrual Sostenible',
-      puntos: 200,
-      imagen: '/api/placeholder/120/120'
-    },
-    {
-      id: 2,
-      nombre: 'Libro "Mujeres que Cambiaron el Mundo"',
-      puntos: 150,
-      imagen: '/api/placeholder/120/120'
-    }
-  ];
-  
-  // Actividades pendientes
-  const actividadesPendientes = [
-    {
-      id: 1,
-      titulo: 'Quiz: ¿Qué tanto sabes de tu cuerpo?',
-      curso: 'Salud Menstrual y Hormonas',
-      fechaLimite: '2 días',
-      tipo: 'quiz'
-    },
-    {
-      id: 2,
-      titulo: 'Foro: Experiencias con la menstruación',
-      curso: 'Inteligencia Emocional y Menstruación',
-      fechaLimite: '5 días',
-      tipo: 'foro'
-    }
-  ];
-  
-  // Insignias desbloqueadas
-  const insignias = [
-    {
-      id: 1,
-      nombre: 'Exploradora Digital',
-      descripcion: 'Completaste tu perfil y primer acceso',
-      imagen: '🚀',
-      desbloqueada: true
-    },
-    {
-      id: 2,
-      nombre: 'Amiga de su Ciclo',
-      descripcion: 'Completaste el Capítulo 3 y aprendiste sobre tu ciclo menstrual',
-      imagen: '🌙',
-      desbloqueada: true
-    },
-    {
-      id: 3,
-      nombre: 'Guardiana del Consentimiento',
-      descripcion: 'Completaste los retos del Capítulo 6',
-      imagen: '🛡️',
-      desbloqueada: false
-    }
-  ];
-  
-  // Función para manejar el código QR o secreto
-  const manejarCodigoSecreto = () => {
-    if (codigoInput.toLowerCase() === 'lobitaluna') {
-      // Desbloquear contenido especial o insignia
-      setUsuario({...usuario, insignias: usuario.insignias + 1, puntos: usuario.puntos + 25});
-      alert('¡Felicidades! Has desbloqueado la insignia "Amiga de su Ciclo" y ganado 25 puntos extra.');
-      setMostrarCodigoModal(false);
-    } else {
-      alert('Código incorrecto. ¡Intenta de nuevo!');
-    }
+  // Cambiar color de piel con animación
+  const changeSkinColor = (color) => {
+    setAvatarConfig({...avatarConfig, skinColor: color});
+    setPageEffect(true);
+    setTimeout(() => setPageEffect(false), 300);
   };
   
-  // Componentes de la interfaz
-  const MenuLateral = () => (
-    <div className="w-64 bg-purple-100 h-screen p-6 flex flex-col">
-      <div className="flex items-center mb-8">
-        <div className="text-4xl mr-3">{usuario.avatar}</div>
-        <div>
-          <h3 className="text-lg font-bold text-purple-800">¡Hola, {usuario.nombre}!</h3>
-          <p className="text-sm text-purple-600">Nivel {usuario.nivel} · {usuario.puntos} pts</p>
+  // Manejo de cambios en inputs
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({
+      ...formData,
+      [name]: value
+    });
+    
+    // Validación en tiempo real
+    validateField(name, value);
+  };
+
+  // Validación de campos
+  const validateField = (name, value) => {
+    let newErrors = {...errors};
+    
+    switch(name) {
+      case 'email':
+      case 'resetEmail':
+        if (!value) {
+          newErrors[name] = 'El correo es requerido';
+        } else if (!/\S+@\S+\.\S+/.test(value)) {
+          newErrors[name] = 'Correo inválido';
+        } else {
+          delete newErrors[name];
+        }
+        break;
+        
+      case 'password':
+        if (!value) {
+          newErrors[name] = 'La contraseña es requerida';
+        } else if (value.length < 6) {
+          newErrors[name] = 'Mínimo 6 caracteres';
+        } else {
+          delete newErrors[name];
+        }
+        break;
+        
+      case 'confirmPassword':
+        if (!value) {
+          newErrors[name] = 'Confirma tu contraseña';
+        } else if (value !== formData.password) {
+          newErrors[name] = 'Las contraseñas no coinciden';
+        } else {
+          delete newErrors[name];
+        }
+        break;
+        
+      case 'name':
+      case 'username':
+        if (!value) {
+          newErrors[name] = `${name === 'name' ? 'El nombre' : 'El usuario'} es requerido`;
+        } else {
+          delete newErrors[name];
+        }
+        break;
+        
+      default:
+        break;
+    }
+    
+    setErrors(newErrors);
+  };
+  
+  // Alternar visibilidad de contraseña
+  const togglePasswordVisibility = () => {
+    setPasswordVisible(!passwordVisible);
+  };
+  
+  // Navegación entre etapas con animación
+  const goToRegister = () => {
+    setPageEffect(true);
+    setTimeout(() => {
+      setStage('register');
+      setPageEffect(false);
+    }, 500);
+  };
+  
+  const goToWelcome = () => {
+    setPageEffect(true);
+    setTimeout(() => {
+      setStage('welcome');
+      setActiveTab('login');
+      setPageEffect(false);
+    }, 500);
+  };
+  
+  // Cambio de pestañas con animación
+  const changeTab = (tab) => {
+    setPageEffect(true);
+    setTimeout(() => {
+      setActiveTab(tab);
+      setPageEffect(false);
+    }, 300);
+  };
+  
+  // Envío de formulario
+  const handleSubmit = (e) => {
+    if (e) e.preventDefault();
+    
+    // Validación completa
+    let isValid = true;
+    let newErrors = {};
+    
+    if (activeTab === 'login') {
+      if (!formData.email) {
+        newErrors.email = 'El correo es requerido';
+        isValid = false;
+      }
+      if (!formData.password) {
+        newErrors.password = 'La contraseña es requerida';
+        isValid = false;
+      }
+    } else if (stage === 'register') {
+      if (!formData.name) {
+        newErrors.name = 'El nombre es requerido';
+        isValid = false;
+      }
+      if (!formData.username) {
+        newErrors.username = 'El usuario es requerido';
+        isValid = false;
+      }
+      if (!formData.email) {
+        newErrors.email = 'El correo es requerido';
+        isValid = false;
+      }
+      if (!formData.password) {
+        newErrors.password = 'La contraseña es requerida';
+        isValid = false;
+      }
+      if (formData.confirmPassword !== formData.password) {
+        newErrors.confirmPassword = 'Las contraseñas no coinciden';
+        isValid = false;
+      }
+    } else if (activeTab === 'reset') {
+      if (!formData.resetEmail) {
+        newErrors.resetEmail = 'El correo es requerido';
+        isValid = false;
+      }
+    }
+    
+    setErrors(newErrors);
+    
+    if (isValid) {
+      // Simulación de envío exitoso
+      alert(`Formulario de ${activeTab === 'login' ? 'inicio de sesión' : activeTab === 'reset' ? 'recuperación' : 'registro'} enviado con éxito`);
+      
+      // Efecto de página
+      setPageEffect(true);
+      setTimeout(() => {
+        setPageEffect(false);
+      }, 500);
+    }
+  };
+
+  // Componente de círculos de nivel
+  const LevelCircles = () => (
+    <div className="flex flex-col items-center">
+      <div className="relative w-64 h-64 mb-8 transform transition-all duration-300 hover:scale-105">
+        <div className="absolute inset-0 bg-pink-100 rounded-full animate-pulse"></div>
+        <div className="absolute inset-8 bg-pink-200 rounded-full"></div>
+        <div className="absolute inset-16 bg-pink-300 rounded-full"></div>
+        <div className="absolute inset-24 bg-pink-400 rounded-full"></div>
+        <div className="absolute inset-32 bg-pink-500 rounded-full"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-lg">
+          <Heart size={24} className="text-pink-500" />
         </div>
       </div>
       
-      <div className="space-y-4 flex-grow">
-        <button 
-          onClick={() => setSeccionActual('zona-aprendizaje')} 
-          className={`flex items-center w-full p-3 rounded-lg ${seccionActual === 'zona-aprendizaje' ? 'bg-purple-200 text-purple-800' : 'text-purple-700 hover:bg-purple-200'}`}
-        >
-          <Layout className="mr-3 h-5 w-5" />
-          <span>Zona de Aprendizaje</span>
-        </button>
-        
-        <button 
-          onClick={() => setSeccionActual('cursos')}
-          className={`flex items-center w-full p-3 rounded-lg ${seccionActual === 'cursos' ? 'bg-purple-200 text-purple-800' : 'text-purple-700 hover:bg-purple-200'}`}
-        >
-          <Book className="mr-3 h-5 w-5" />
-          <span>Mis Cursos</span>
-        </button>
-        
-        <button 
-          onClick={() => setSeccionActual('retos')}
-          className={`flex items-center w-full p-3 rounded-lg ${seccionActual === 'retos' ? 'bg-purple-200 text-purple-800' : 'text-purple-700 hover:bg-purple-200'}`}
-        >
-          <Star className="mr-3 h-5 w-5" />
-          <span>Retos</span>
-        </button>
-        
-        <button 
-          onClick={() => setSeccionActual('foros')}
-          className={`flex items-center w-full p-3 rounded-lg ${seccionActual === 'foros' ? 'bg-purple-200 text-purple-800' : 'text-purple-700 hover:bg-purple-200'}`}
-        >
-          <MessageCircle className="mr-3 h-5 w-5" />
-          <span>Foros</span>
-        </button>
-        
-        <button 
-          onClick={() => setSeccionActual('insignias')}
-          className={`flex items-center w-full p-3 rounded-lg ${seccionActual === 'insignias' ? 'bg-purple-200 text-purple-800' : 'text-purple-700 hover:bg-purple-200'}`}
-        >
-          <Award className="mr-3 h-5 w-5" />
-          <span>Mis Insignias</span>
-        </button>
-      </div>
+      <h2 className="text-xl text-gray-700 mb-2 font-bold">Descubre los 5 niveles</h2>
       
-      <div className="mt-auto pt-4 border-t border-purple-200">
-        <button
-          onClick={() => setMostrarCodigoModal(true)}
-          className="w-full py-2 px-4 bg-pink-500 text-white rounded-lg hover:bg-pink-600 transition-colors"
-        >
-          Ingresar Código Secreto
-        </button>
-      </div>
-    </div>
-  );
-  
-  const Cabecera = () => (
-    <div className="bg-white p-4 border-b border-purple-100 flex justify-between items-center">
-      <h1 className="text-2xl font-bold text-purple-800">Cesi y Lobita Luna</h1>
-      <div className="flex items-center space-x-4">
-        <button 
-          onClick={() => setPerfilDrawer(!perfilDrawer)}
-          className="relative p-2 rounded-full hover:bg-purple-100"
-        >
-          <User className="h-6 w-6 text-purple-700" />
-        </button>
-        <button className="relative p-2 rounded-full hover:bg-purple-100">
-          <Bell className="h-6 w-6 text-purple-700" />
-          {notificaciones > 0 && (
-            <span className="absolute top-0 right-0 bg-pink-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-              {notificaciones}
-            </span>
-          )}
-        </button>
-      </div>
-    </div>
-  );
-  
-  const ZonaAprendizaje = () => (
-    <div className="p-6">
-      <div className="bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl p-6 mb-8 text-white">
-        <h2 className="text-2xl font-bold mb-2">¡Bienvenida a tu Zona de Aprendizaje!</h2>
-        <p className="opacity-90">Continúa tu viaje con Cesi y Lobita Luna explorando los cursos, completando actividades y ganando insignias.</p>
-        <div className="mt-4 bg-white/20 rounded-full h-3">
+      <div className="flex space-x-4 mt-4">
+        {[1, 2, 3, 4, 5].map((level) => (
           <div 
-            className="bg-white rounded-full h-3" 
-            style={{width: `${usuario.progreso}%`}}
-          ></div>
-        </div>
-        <div className="mt-2 text-sm">{usuario.progreso}% completado</div>
+            key={level} 
+            className="w-10 h-10 rounded-full flex items-center justify-center shadow-md transform transition-all duration-200 hover:scale-110"
+            style={{ backgroundColor: level === 1 ? '#FFB6C1' : '#FF69B4' }}
+          >
+            <span className="text-xs font-bold text-white">{level}</span>
+          </div>
+        ))}
       </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white rounded-xl shadow-sm p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-bold text-purple-800">Cursos en Progreso</h3>
-            <button 
-              onClick={() => setSeccionActual('cursos')}
-              className="text-sm text-purple-600 hover:text-purple-800 flex items-center"
-            >
-              Ver todos <ChevronRight className="h-4 w-4" />
-            </button>
+    </div>
+  );
+  
+  // Componente mejorado para el avatar
+  const Avatar = ({ config }) => {
+    return (
+      <div className="relative w-48 h-48 rounded-2xl overflow-hidden bg-white border-4 border-white shadow-lg transform transition-all duration-300 hover:scale-105" 
+           style={{ backgroundColor: config.background }}>
+        {/* Cara */}
+        <div className="absolute top-12 left-1/2 transform -translate-x-1/2">
+          <div className="w-32 h-36 rounded-3xl" style={{ backgroundColor: config.skinColor }}></div>
+          
+          {/* Ojos */}
+          <div className="absolute top-8 left-6 w-6 h-6 rounded-full bg-white flex items-center justify-center">
+            <div className="w-4 h-4 rounded-full" style={{ backgroundColor: config.eyeColor }}></div>
+          </div>
+          <div className="absolute top-8 right-6 w-6 h-6 rounded-full bg-white flex items-center justify-center">
+            <div className="w-4 h-4 rounded-full" style={{ backgroundColor: config.eyeColor }}></div>
           </div>
           
-          {cursos.slice(0, 2).map(curso => (
-            <div key={curso.id} className="mb-4 border-b border-purple-100 pb-4 last:border-0 last:pb-0">
-              <div className="flex items-start">
-                <div className="text-3xl mr-3">{curso.icono}</div>
-                <div className="flex-1">
-                  <h4 className="font-medium text-purple-800">{curso.titulo}</h4>
-                  <div className="text-sm text-gray-500 mb-2">{curso.capitulo}</div>
-                  <div className="w-full bg-purple-100 rounded-full h-2 mb-1">
-                    <div 
-                      className="bg-purple-500 rounded-full h-2" 
-                      style={{width: `${curso.progreso}%`}}
-                    ></div>
-                  </div>
-                  <div className="text-xs text-purple-600">{curso.progreso}% completado</div>
-                </div>
+          {/* Accesorio - Gafas */}
+          {config.accessory === 'glasses' && (
+            <div className="absolute top-7 left-1/2 transform -translate-x-1/2">
+              <div className="w-28 h-8 border-2 border-gray-800 rounded-full flex justify-between px-1">
+                <div className="w-8 h-7 rounded-full border-2 border-gray-800"></div>
+                <div className="w-8 h-7 rounded-full border-2 border-gray-800"></div>
               </div>
             </div>
-          ))}
-        </div>
-        
-        <div className="bg-white rounded-xl shadow-sm p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-bold text-purple-800">Actividades Pendientes</h3>
-            <span className="bg-pink-100 text-pink-600 text-sm px-2 py-1 rounded-full">
-              {actividadesPendientes.length} pendientes
-            </span>
-          </div>
+          )}
           
-          {actividadesPendientes.map(actividad => (
-            <div key={actividad.id} className="mb-4 border-b border-purple-100 pb-4 last:border-0 last:pb-0">
-              <div className="flex justify-between">
-                <div>
-                  <h4 className="font-medium text-purple-800">{actividad.titulo}</h4>
-                  <div className="text-sm text-gray-500">{actividad.curso}</div>
-                </div>
-                <div className="text-sm text-pink-500 flex items-center">
-                  <Calendar className="h-4 w-4 mr-1" />
-                  {actividad.fechaLimite}
-                </div>
-              </div>
-              <button className="mt-2 w-full py-1.5 text-sm bg-purple-100 hover:bg-purple-200 text-purple-700 rounded-lg transition-colors">
-                Ir a la actividad
+          {/* Boca */}
+          <div className="absolute bottom-10 left-1/2 transform -translate-x-1/2 w-10 h-3 rounded-lg bg-pink-400"></div>
+          
+          {/* Pelo */}
+          <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-36 h-16 -mt-6" 
+               style={{ backgroundColor: config.hairColor, borderRadius: '50% 50% 0 0' }}></div>
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="flex h-screen items-center justify-center bg-gradient-to-r from-cyan-200 to-pink-200 overflow-hidden">
+      {/* Decoraciones de fondo */}
+      <div className="absolute top-10 right-10 w-16 h-16 rounded-full bg-yellow-300 opacity-70 animate-pulse"></div>
+      <div className="absolute bottom-20 left-20 w-24 h-24 rounded-full bg-purple-400 opacity-50"></div>
+      <div className="absolute top-1/3 left-10 w-12 h-12 rounded-full bg-cyan-300 opacity-60"></div>
+      
+      {/* Libro */}
+      <div className={`w-full max-w-5xl mx-auto flex shadow-2xl rounded-lg overflow-hidden transform transition-all duration-500 ${pageEffect ? 'scale-95 rotate-1' : 'scale-100'}`}
+           style={{ 
+             height: '80vh', 
+             borderRadius: '24px',
+             boxShadow: '0 20px 30px rgba(0,0,0,0.2), 0 0 80px rgba(255,105,180,0.3)'
+           }}>
+        
+        {/* Página izquierda */}
+        <div className="w-1/2 relative flex flex-col items-center justify-center" 
+             style={{ 
+               background: 'linear-gradient(to bottom right, #ffffff, #f8f8f8)',
+               borderRight: '1px solid rgba(0,0,0,0.1)',
+               boxShadow: 'inset -10px 0 20px -10px rgba(0,0,0,0.1)'
+             }}>
+          
+          {stage === 'welcome' ? (
+            <div className="text-center px-8 py-12 w-full max-w-sm flex flex-col items-center">
+              <h1 className="text-3xl font-bold mb-8 text-pink-500">Bienvenida a Pandora</h1>
+              <LevelCircles />
+              
+              <button
+                onClick={goToRegister}
+                className="mt-8 py-3 px-6 bg-gradient-to-r from-purple-400 to-purple-600 text-white font-bold rounded-full transform transition-all duration-300 hover:scale-105 hover:shadow-lg"
+              >
+                Comienza tu viaje
               </button>
             </div>
-          ))}
-        </div>
-        
-        <div className="bg-white rounded-xl shadow-sm p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-bold text-purple-800">Mis Retos Activos</h3>
-            <button 
-              onClick={() => setSeccionActual('retos')}
-              className="text-sm text-purple-600 hover:text-purple-800 flex items-center"
-            >
-              Ver todos <ChevronRight className="h-4 w-4" />
-            </button>
+          ) : (
+            <div className="text-center px-8 py-12 w-full max-w-sm flex flex-col items-center">
+              <h1 className="text-2xl font-bold mb-6 text-pink-500">CREA TU PERSONAJE</h1>
+              
+              <Avatar config={avatarConfig} />
+              
+              <h3 className="text-gray-600 mt-6 mb-2 font-medium uppercase text-sm tracking-wider">ELIGE COLOR DE PIEL</h3>
+              <div className="flex flex-wrap gap-2 justify-center mb-6">
+                {skinColors.map((color) => (
+                  <button
+                    key={color}
+                    className={`w-8 h-8 rounded-full border-2 transition-all duration-200 ${avatarConfig.skinColor === color ? 'border-pink-500 scale-110' : 'border-gray-200'}`}
+                    style={{ backgroundColor: color }}
+                    onClick={() => changeSkinColor(color)}
+                  ></button>
+                ))}
+              </div>
+              
+              <button
+                onClick={goToWelcome}
+                className="mt-4 py-2 px-4 bg-gray-200 text-gray-700 rounded-full transform transition-all duration-200 hover:scale-105 hover:bg-gray-300"
+              >
+                <ArrowLeft size={16} className="inline mr-2" />
+                Volver
+              </button>
+            </div>
+          )}
+          
+          {/* Decoración lateral e indicador de página */}
+          <div className="absolute left-0 top-0 h-full w-12 flex flex-col items-center py-8">
+            <div className="w-8 h-8 rounded-full bg-pink-500 mb-4 flex items-center justify-center text-white">
+              <Star size={16} />
+            </div>
+            <div className="w-8 h-8 rounded-full bg-cyan-400 mb-4 flex items-center justify-center text-white">
+              <User size={16} />
+            </div>
           </div>
           
-          {retos.map(reto => (
-            <div key={reto.id} className="mb-4 border-b border-purple-100 pb-4 last:border-0 last:pb-0">
-              <div className="flex justify-between">
-                <div>
-                  <h4 className="font-medium text-purple-800">{reto.titulo}</h4>
-                  <div className="text-sm text-gray-500">{reto.descripcion}</div>
-                </div>
-                <div className="text-sm text-purple-600 bg-purple-50 h-min px-2 py-1 rounded-full">
-                  {reto.puntos} pts
-                </div>
-              </div>
-              <div className="mt-2 flex justify-between text-sm">
-                <span className="text-pink-500 flex items-center">
-                  <Calendar className="h-4 w-4 mr-1" />
-                  {reto.tiempo} restantes
-                </span>
-                <button className="text-purple-600 hover:text-purple-800">
-                  Iniciar reto
+          {/* Indicador de página */}
+          <div className="absolute bottom-6 text-gray-500 text-sm">
+            <span className="px-4 py-2 rounded-full bg-white shadow-md">
+              {stage === 'welcome' ? '1' : '2'} / 5
+            </span>
+          </div>
+        </div>
+        
+        {/* Página derecha */}
+        <div className="w-1/2 relative flex flex-col" 
+             style={{ 
+               background: 'linear-gradient(to bottom, #ffffff, #f8f8f8)',
+               boxShadow: 'inset 10px 0 20px -10px rgba(0,0,0,0.1)'
+             }}>
+          
+          {/* Tabs de navegación */}
+          {stage === 'welcome' && (
+            <div className="flex justify-center pt-8 px-6 mb-4">
+              <div className="flex bg-gray-100 p-1 rounded-full">
+                <button 
+                  className={`py-2 px-4 rounded-full text-sm font-medium transition-all ${activeTab === 'login' ? 'bg-white shadow-md text-pink-500' : 'text-gray-500 hover:text-gray-700'}`}
+                  onClick={() => changeTab('login')}
+                >
+                  Ingresar
+                </button>
+                <button 
+                  className={`py-2 px-4 rounded-full text-sm font-medium transition-all ${activeTab === 'reset' ? 'bg-white shadow-md text-pink-500' : 'text-gray-500 hover:text-gray-700'}`}
+                  onClick={() => changeTab('reset')}
+                >
+                  Recuperar
                 </button>
               </div>
             </div>
-          ))}
-        </div>
-        
-        <div className="bg-white rounded-xl shadow-sm p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-bold text-purple-800">Mis Insignias</h3>
-            <button 
-              onClick={() => setSeccionActual('insignias')}
-              className="text-sm text-purple-600 hover:text-purple-800 flex items-center"
-            >
-              Ver todas <ChevronRight className="h-4 w-4" />
-            </button>
-          </div>
+          )}
           
-          <div className="flex justify-around">
-            {insignias.filter(insignia => insignia.desbloqueada).map(insignia => (
-              <div key={insignia.id} className="text-center">
-                <div className="text-4xl mb-2">{insignia.imagen}</div>
-                <div className="text-sm font-medium text-purple-800">{insignia.nombre}</div>
-              </div>
-            ))}
-          </div>
-          
-          <div className="mt-4 pt-4 border-t border-purple-100">
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-600">{usuario.insignias} de 12 insignias desbloqueadas</span>
-              <span className="text-purple-600">{Math.round((usuario.insignias/12)*100)}%</span>
-            </div>
-            <div className="w-full bg-purple-100 rounded-full h-2 mt-1">
-              <div 
-                className="bg-purple-500 rounded-full h-2" 
-                style={{width: `${(usuario.insignias/12)*100}%`}}
-              ></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-  
-  const Cursos = () => (
-    <div className="p-6">
-      <h2 className="text-2xl font-bold mb-6 text-purple-800">Mis Cursos</h2>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {cursos.map(curso => (
-          <div key={curso.id} className="bg-white rounded-xl shadow-sm overflow-hidden">
-            <img 
-              src={curso.imagen} 
-              alt={curso.titulo} 
-              className="w-full h-40 object-cover"
-            />
-            <div className="p-4">
-              <div className="text-xs text-purple-600 font-medium mb-1">{curso.capitulo}</div>
-              <h3 className="font-bold text-purple-800 mb-2">{curso.titulo}</h3>
-              <p className="text-sm text-gray-600 mb-4">{curso.descripcion}</p>
-              
-              <div className="mb-4">
-                <div className="flex justify-between text-sm mb-1">
-                  <span className="text-gray-600">Progreso</span>
-                  <span className="text-purple-600">{curso.progreso}%</span>
+          <div className="flex-1 px-8 pt-4 pb-6 overflow-y-auto">
+            {/* Formulario de inicio de sesión */}
+            {stage === 'welcome' && activeTab === 'login' && (
+              <div className="space-y-6 h-full flex flex-col">
+                <h2 className="text-2xl font-bold text-gray-800 text-center mb-4">¡Bienvenida de nuevo!</h2>
+                
+                <div>
+                  <div className="flex items-center mb-2">
+                    <Mail size={16} className="text-gray-400 mr-2" />
+                    <label htmlFor="email" className="block text-gray-700 text-sm font-medium">
+                      Correo electrónico
+                    </label>
+                  </div>
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    className={`w-full px-4 py-3 bg-gray-50 border ${errors.email ? 'border-red-300' : 'border-gray-200'} rounded-xl focus:outline-none focus:ring-2 focus:ring-pink-300 transition-all`}
+                    placeholder="tu@correo.com"
+                  />
+                  {errors.email && <p className="text-red-400 text-xs mt-1">{errors.email}</p>}
                 </div>
-                <div className="w-full bg-purple-100 rounded-full h-2">
-                  <div 
-                    className="bg-purple-500 rounded-full h-2" 
-                    style={{width: `${curso.progreso}%`}}
-                  ></div>
+                
+                <div>
+                  <div className="flex items-center mb-2">
+                    <Lock size={16} className="text-gray-400 mr-2" />
+                    <label htmlFor="password" className="block text-gray-700 text-sm font-medium">
+                      Contraseña
+                    </label>
+                  </div>
+                  <div className="relative">
+                    <input
+                      type={passwordVisible ? "text" : "password"}
+                      id="password"
+                      name="password"
+                      value={formData.password}
+                      onChange={handleInputChange}
+                      className={`w-full px-4 py-3 bg-gray-50 border ${errors.password ? 'border-red-300' : 'border-gray-200'} rounded-xl focus:outline-none focus:ring-2 focus:ring-pink-300 transition-all`}
+                      placeholder="Tu contraseña secreta"
+                    />
+                    <button 
+                      type="button" 
+                      className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
+                      onClick={togglePasswordVisibility}
+                    >
+                      {passwordVisible ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
+                  {errors.password && <p className="text-red-400 text-xs mt-1">{errors.password}</p>}
+                  
+                  <div className="flex justify-end mt-2">
+                    <button 
+                      type="button" 
+                      className="text-xs text-pink-500 hover:text-pink-600 font-medium"
+                      onClick={() => changeTab('reset')}
+                    >
+                      ¿Olvidaste tu contraseña?
+                    </button>
+                  </div>
                 </div>
-              </div>
-              
-              <button className="w-full py-2 bg-purple-100 hover:bg-purple-200 text-purple-700 rounded-lg transition-colors">
-                Continuar
-              </button>
-            </div>
-          </div>
-        ))}
-        
-        <div className="bg-purple-50 rounded-xl shadow-sm border-2 border-dashed border-purple-200 flex flex-col items-center justify-center p-6">
-          <div className="text-4xl text-purple-400 mb-2">🔍</div>
-          <h3 className="font-bold text-purple-800 mb-1">Explorar más cursos</h3>
-          <p className="text-sm text-center text-purple-600 mb-4">Descubre nuevos capítulos y contenido</p>
-          <button className="py-2 px-4 bg-purple-100 hover:bg-purple-200 text-purple-700 rounded-lg transition-colors">
-            Ver catálogo
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-  
-  const Retos = () => (
-    <div className="p-6">
-      <h2 className="text-2xl font-bold mb-6 text-purple-800">Retos</h2>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {retos.map(reto => (
-          <div key={reto.id} className="bg-white rounded-xl shadow-sm p-6">
-            <div className="flex justify-between items-start mb-3">
-              <h3 className="font-bold text-purple-800">{reto.titulo}</h3>
-              <div className="text-sm text-purple-600 bg-purple-50 px-2 py-1 rounded-full">
-                {reto.puntos} pts
-              </div>
-            </div>
-            <p className="text-sm text-gray-600 mb-4">{reto.descripcion}</p>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-pink-500 flex items-center">
-                <Calendar className="h-4 w-4 mr-1" />
-                {reto.tiempo} restantes
-              </span>
-              <button className="py-1.5 px-3 bg-purple-500 hover:bg-purple-600 text-white text-sm rounded-lg transition-colors">
-                Iniciar reto
-              </button>
-            </div>
-          </div>
-        ))}
-        
-        {/* Reto especial vinculado a la cartilla física */}
-        <div className="bg-gradient-to-br from-pink-500 to-purple-600 rounded-xl shadow-sm p-6 text-white">
-          <div className="flex justify-between items-start mb-3">
-            <h3 className="font-bold">Reto Especial: Código Secreto</h3>
-            <div className="text-sm bg-white/20 px-2 py-1 rounded-full">
-              100 pts
-            </div>
-          </div>
-          <p className="text-sm opacity-90 mb-4">Busca el código secreto en la página 15 de tu cartilla y desbloquea contenido extra en la plataforma.</p>
-          <div className="flex justify-between items-center">
-            <span className="text-sm flex items-center opacity-80">
-              <Book className="h-4 w-4 mr-1" />
-              Vinculado a la cartilla
-            </span>
-            <button 
-              onClick={() => setMostrarCodigoModal(true)}
-              className="py-1.5 px-3 bg-white hover:bg-white/90 text-purple-600 text-sm font-medium rounded-lg transition-colors"
-            >
-              Ingresar código
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-  
-  const Foros = () => (
-    <div className="p-6">
-      <h2 className="text-2xl font-bold mb-6 text-purple-800">Foros de Discusión</h2>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white rounded-xl shadow-sm p-6">
-          <div className="bg-purple-50 p-3 rounded-lg mb-4">
-            <h3 className="font-bold text-purple-800 mb-1">¿Qué reglas de las redes sociales son injustas para las mujeres?</h3>
-            <div className="text-sm text-gray-600 mb-2">Foro del Capítulo 1: Estereotipos y Redes Sociales</div>
-            <div className="flex items-center text-sm text-purple-600">
-              <MessageCircle className="h-4 w-4 mr-1" />
-              15 comentarios
-            </div>
-          </div>
-          
-          <div className="space-y-4">
-            <div className="flex items-start">
-              <div className="flex-shrink-0 w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center mr-3 text-purple-800 font-bold">
-                M
-              </div>
-              <div>
-                <div className="bg-purple-50 p-3 rounded-lg">
-                  <div className="font-medium text-purple-800 mb-1">María, 14 años</div>
-                  <p className="text-sm text-gray-600">En mi experiencia, las redes sociales son mucho más estrictas con el cuerpo femenino. Mi hermano puede subir fotos sin camiseta, pero a mis amigas las censuran por mostrar los hombros en clase de deporte.</p>
+                
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="remember"
+                    className="h-4 w-4 text-pink-500 focus:ring-pink-400 border-gray-300 rounded"
+                  />
+                  <label htmlFor="remember" className="ml-2 block text-sm text-gray-600">
+                    Recordar sesión
+                  </label>
                 </div>
-                <div className="flex text-xs text-purple-600 mt-1 space-x-4">
-                  <button className="flex items-center">
-                    <Heart className="h-3 w-3 mr-1" />
-                    8 Me gusta
+                
+                <div className="flex-1 flex items-end justify-center w-full mt-6">
+                  <button
+                    onClick={handleSubmit}
+                    className="w-full py-3 px-4 bg-gradient-to-r from-pink-400 to-pink-500 hover:from-pink-500 hover:to-pink-600 text-white font-bold rounded-xl transition duration-200 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500 shadow-lg flex items-center justify-center"
+                  >
+                    <span>Ingresar</span>
+                    <ArrowRight size={18} className="ml-2" />
                   </button>
-                  <button className="flex items-center">
-                    <MessageCircle className="h-3 w-3 mr-1" />
-                    Responder
+                </div>
+                
+                <div className="text-center text-gray-500 text-sm">
+                  ¿No tienes cuenta? 
+                  <button 
+                    onClick={goToRegister} 
+                    className="ml-1 text-pink-500 font-medium"
+                  >
+                    Regístrate aquí
                   </button>
                 </div>
               </div>
-            </div>
+            )}
             
-            <div className="flex items-start">
-              <div className="flex-shrink-0 w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center mr-3 text-purple-800 font-bold">
-                L
-              </div>
-              <div>
-                <div className="bg-purple-50 p-3 rounded-lg">
-                  <div className="font-medium text-purple-800 mb-1">Laura, 15 años</div>
-                  <p className="text-sm text-gray-600">También he notado que cuando las chicas opinamos sobre videojuegos o deportes, recibimos muchos más comentarios negativos que los chicos. Como si tuviéramos que "demostrar" que realmente nos gusta ese tema.</p>
+            {/* Formulario de recuperación de contraseña */}
+            {stage === 'welcome' && activeTab === 'reset' && (
+              <div className="space-y-6 h-full flex flex-col">
+                <h2 className="text-2xl font-bold text-gray-800 text-center mb-4">¿Olvidaste tu contraseña?</h2>
+                
+                <div className="p-4 bg-pink-50 rounded-lg">
+                  <p className="text-gray-600 text-sm">
+                    No te preocupes, nos pasa a todos. Ingresa tu correo electrónico y te enviaremos instrucciones para recuperar tu cuenta.
+                  </p>
                 </div>
-                <div className="flex text-xs text-purple-600 mt-1 space-x-4">
-                  <button className="flex items-center">
-                    <Heart className="h-3 w-3 mr-1" />
-                    12 Me gusta
+                
+                <div>
+                  <div className="flex items-center mb-2">
+                    <Mail size={16} className="text-gray-400 mr-2" />
+                    <label htmlFor="resetEmail" className="block text-gray-700 text-sm font-medium">
+                      Correo electrónico
+                    </label>
+                  </div>
+                  <input
+                    type="email"
+                    id="resetEmail"
+                    name="resetEmail"
+                    value={formData.resetEmail}
+                    onChange={handleInputChange}
+                    className={`w-full px-4 py-3 bg-gray-50 border ${errors.resetEmail ? 'border-red-300' : 'border-gray-200'} rounded-xl focus:outline-none focus:ring-2 focus:ring-pink-300 transition-all`}
+                    placeholder="tu@correo.com"
+                  />
+                  {errors.resetEmail && <p className="text-red-400 text-xs mt-1">{errors.resetEmail}</p>}
+                </div>
+                
+                <div className="flex-1 flex items-end justify-center w-full mt-6">
+                  <button
+                    onClick={handleSubmit}
+                    className="w-full py-3 px-4 bg-gradient-to-r from-pink-400 to-pink-500 hover:from-pink-500 hover:to-pink-600 text-white font-bold rounded-xl transition duration-200 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500 shadow-lg flex items-center justify-center"
+                  >
+                    <span>Enviar instrucciones</span>
+                    <ArrowRight size={18} className="ml-2" />
                   </button>
-                  <button className="flex items-center">
-                    <MessageCircle className="h-3 w-3 mr-1" />
-                    Responder
+                </div>
+                
+                <div className="text-center">
+                  <button 
+                    onClick={() => changeTab('login')} 
+                    className="text-sm text-gray-500 hover:text-pink-500 font-medium"
+                  >
+                    Volver al inicio de sesión
                   </button>
                 </div>
               </div>
-            </div>
-          </div>
-          
-          <div className="mt-4 pt-4 border-t border-purple-100">
-            <textarea 
-              placeholder="Escribe tu comentario..." 
-              className="w-full p-3 border border-purple-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
-              rows={3}
-            />
-            <div className="flex justify-end mt-2">
-              <button className="py-1.5 px-4 bg-purple-500 hover:bg-purple-600 text-white text-sm rounded-lg transition-colors">
-                Comentar
-              </button>
-            </div>
-          </div>
-        </div>
-        
-        <div>
-          <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
-            <h3 className="font-bold text-purple-800 mb-4">Foros Activos</h3>
+            )}
             
-            <div className="space-y-3">
-              <div className="p-3 border border-purple-100 rounded-lg hover:bg-purple-50 cursor-pointer transition-colors">
-                <h4 className="font-medium text-purple-800">Experiencias con la menstruación</h4>
-                <div className="text-sm text-gray-600 mb-1">Capítulo 2: Inteligencia Emocional y Menstruación</div>
-                <div className="flex items-center text-xs text-purple-600">
-                  <MessageCircle className="h-3 w-3 mr-1" />
-                  23 comentarios
+            {/* Formulario de registro */}
+            {stage === 'register' && (
+              <div className="space-y-4 h-full flex flex-col">
+                <h2 className="text-2xl font-bold text-gray-800 text-center mb-4">¡Únete a la aventura!</h2>
+                
+                <div>
+                  <div className="flex items-center mb-1">
+                    <User size={16} className="text-gray-400 mr-2" />
+                    <label htmlFor="name" className="block text-gray-700 text-sm font-medium">
+                      Nombre completo
+                    </label>
+                  </div>
+                  <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    className={`w-full px-4 py-2.5 bg-gray-50 border ${errors.name ? 'border-red-300' : 'border-gray-200'} rounded-xl focus:outline-none focus:ring-2 focus:ring-pink-300 transition-all`}
+                    placeholder="Tu nombre real"
+                  />
+                  {errors.name && <p className="text-red-400 text-xs mt-1">{errors.name}</p>}
                 </div>
-              </div>
-              
-              <div className="p-3 border border-purple-100 rounded-lg hover:bg-purple-50 cursor-pointer transition-colors">
-                <h4 className="font-medium text-purple-800">Preguntas sobre anatomía femenina</h4>
-                <div className="text-sm text-gray-600 mb-1">Capítulo 5: Sexualidad y Anatomía</div>
-                <div className="flex items-center text-xs text-purple-600">
-                  <MessageCircle className="h-3 w-3 mr-1" />
-                  17 comentarios
+                
+                <div>
+                  <div className="flex items-center mb-1">
+                    <User size={16} className="text-gray-400 mr-2" />
+                    <label htmlFor="username" className="block text-gray-700 text-sm font-medium">
+                      Nombre de usuario
+                    </label>
+                  </div>
+                  <input
+                    type="text"
+                    id="username"
+                    name="username"
+                    value={formData.username}
+                    onChange={handleInputChange}
+                    className={`w-full px-4 py-2.5 bg-gray-50 border ${errors.username ? 'border-red-300' : 'border-gray-200'} rounded-xl focus:outline-none focus:ring-2 focus:ring-pink-300 transition-all`}
+                    placeholder="Cómo te conocerán"
+                  />
+                  {errors.username && <p className="text-red-400 text-xs mt-1">{errors.username}</p>}
                 </div>
-              </div>
-              
-              <div className="p-3 border border-purple-100 rounded-lg hover:bg-purple-50 cursor-pointer transition-colors">
-                <h4 className="font-medium text-purple-800">¿Cómo decir NO cuando me siento presionada?</h4>
-                <div className="text-sm text-gray-600 mb-1">Capítulo 6: Consentimiento y Autonomía</div>
-                <div className="flex items-center text-xs text-purple-600">
-                  <MessageCircle className="h-3 w-3 mr-1" />
-                  9 comentarios
+                
+                <div>
+                  <div className="flex items-center mb-1">
+                    <Mail size={16} className="text-gray-400 mr-2" />
+                    <label htmlFor="email" className="block text-gray-700 text-sm font-medium">
+                      Correo electrónico
+                    </label>
+                  </div>
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    className={`w-full px-4 py-2.5 bg-gray-50 border ${errors.email ? 'border-red-300' : 'border-gray-200'} rounded-xl focus:outline-none focus:ring-2 focus:ring-pink-300 transition-all`}
+                    placeholder="tu@correo.com"
+                  />
+                  {errors.email && <p className="text-red-400 text-xs mt-1">{errors.email}</p>}
                 </div>
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl p-6 text-white">
-            <h3 className="font-bold mb-2">¿Tienes una pregunta para las expertas?</h3>
-            <p className="text-sm opacity-90 mb-4">Nuestras ginecólogas y psicólogas aliadas están disponibles para responder tus preguntas de forma segura y anónima.</p>
-            <button className="py-2 px-4 bg-white text-purple-600 rounded-lg hover:bg-white/90 transition-colors">
-              Hacer una pregunta anónima
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-  
-  const Insignias = () => (
-    <div className="p-6">
-      <h2 className="text-2xl font-bold mb-6 text-purple-800">Mis Insignias</h2>
-      
-      <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
-        <div className="mb-4">
-          <div className="flex justify-between text-sm">
-            <span className="text-gray-600">{usuario.insignias} de 12 insignias desbloqueadas</span>
-            <span className="text-purple-600">{Math.round((usuario.insignias/12)*100)}%</span>
-          </div>
-          <div className="w-full bg-purple-100 rounded-full h-2 mt-1">
-            <div 
-              className="bg-purple-500 rounded-full h-2" 
-              style={{width: `${(usuario.insignias/12)*100}%`}}
-            ></div>
-          </div>
-        </div>
-      </div>
-      
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {insignias.map(insignia => (
-          <div key={insignia.id} className={`bg-white rounded-xl shadow-sm p-4 text-center ${!insignia.desbloqueada ? 'opacity-50' : ''}`}>
-            <div className="text-5xl mb-3">{insignia.imagen}</div>
-            <h3 className="font-bold text-purple-800 mb-1">{insignia.nombre}</h3>
-            <p className="text-xs text-gray-600 mb-2">{insignia.descripcion}</p>
-            {!insignia.desbloqueada && (
-              <div className="text-xs bg-purple-100 text-purple-600 py-1 px-2 rounded-full inline-block">
-                Bloqueada
+                
+                <div>
+                  <div className="flex items-center mb-1">
+                    <Lock size={16} className="text-gray-400 mr-2" />
+                    <label htmlFor="password" className="block text-gray-700 text-sm font-medium">
+                      Contraseña
+                    </label>
+                  </div>
+                  <div className="relative">
+                    <input
+                      type={passwordVisible ? "text" : "password"}
+                      id="password"
+                      name="password"
+                      value={formData.password}
+                      onChange={handleInputChange}
+                      className={`w-full px-4 py-2.5 bg-gray-50 border ${errors.password ? 'border-red-300' : 'border-gray-200'} rounded-xl focus:outline-none focus:ring-2 focus:ring-pink-300 transition-all`}
+                      placeholder="Mínimo 6 caracteres"
+                    />
+                    <button 
+                      type="button" 
+                      className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
+                      onClick={togglePasswordVisibility}
+                    >
+                      {passwordVisible ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
+                  {errors.password && <p className="text-red-400 text-xs mt-1">{errors.password}</p>}
+                </div>
+                
+                <div>
+                  <div className="flex items-center mb-1">
+                    <Lock size={16} className="text-gray-400 mr-2" />
+                    <label htmlFor="confirmPassword" className="block text-gray-700 text-sm font-medium">
+                      Confirmar contraseña
+                    </label>
+                  </div>
+                  <input
+                    type={passwordVisible ? "text" : "password"}
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    value={formData.confirmPassword}
+                    onChange={handleInputChange}
+                    className={`w-full px-4 py-2.5 bg-gray-50 border ${errors.confirmPassword ? 'border-red-300' : 'border-gray-200'} rounded-xl focus:outline-none focus:ring-2 focus:ring-pink-300 transition-all`}
+                    placeholder="Repite tu contraseña"
+                  />
+                  {errors.confirmPassword && <p className="text-red-400 text-xs mt-1">{errors.confirmPassword}</p>}
+                </div>
+                
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="terms"
+                    className="h-4 w-4 text-pink-500 focus:ring-pink-400 border-gray-300 rounded"
+                    required
+                  />
+                  <label htmlFor="terms" className="ml-2 block text-sm text-gray-600">
+                    Acepto los <span className="text-pink-500 font-medium">términos y condiciones</span>
+                  </label>
+                </div>
+                
+                <div className="flex-1 flex items-end justify-center w-full">
+                  <button
+                    onClick={handleSubmit}
+                    className="w-full py-3 px-4 bg-gradient-to-r from-pink-400 to-pink-500 hover:from-pink-500 hover:to-pink-600 text-white font-bold rounded-xl transition duration-200 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500 shadow-lg flex items-center justify-center"
+                  >
+                    <span>Crear mi cuenta</span>
+                    <Heart size={18} className="ml-2" />
+                  </button>
+                </div>
               </div>
             )}
           </div>
-        ))}
-        
-        {/* Otras insignias por desbloquear */}
-        <div className="bg-white rounded-xl shadow-sm p-4 text-center opacity-50">
-          <div className="text-5xl mb-3">🌈</div>
-          <h3 className="font-bold text-purple-800 mb-1">Aliada Diversa</h3>
-          <p className="text-xs text-gray-600 mb-2">Completaste el reto de diversidad del Capítulo 1</p>
-          <div className="text-xs bg-purple-100 text-purple-600 py-1 px-2 rounded-full inline-block">
-            Bloqueada
-          </div>
-        </div>
-        
-        <div className="bg-white rounded-xl shadow-sm p-4 text-center opacity-50">
-          <div className="text-5xl mb-3">📝</div>
-          <h3 className="font-bold text-purple-800 mb-1">Exploradora Emocional</h3>
-          <p className="text-xs text-gray-600 mb-2">Completaste 7 días de diario emocional</p>
-          <div className="text-xs bg-purple-100 text-purple-600 py-1 px-2 rounded-full inline-block">
-            Bloqueada
-          </div>
-        </div>
-        
-        <div className="bg-white rounded-xl shadow-sm p-4 text-center opacity-50">
-          <div className="text-5xl mb-3">🧬</div>
-          <h3 className="font-bold text-purple-800 mb-1">Conocedora del Cuerpo</h3>
-          <p className="text-xs text-gray-600 mb-2">Obtuviste 100% en el quiz de anatomía</p>
-          <div className="text-xs bg-purple-100 text-purple-600 py-1 px-2 rounded-full inline-block">
-            Bloqueada
+          
+          {/* Decoración lateral */}
+          <div className="absolute right-0 top-0 h-full w-12 flex flex-col items-center py-8">
+            <div className="flex-1"></div>
+            <div className="w-8 h-8 rounded-full bg-cyan-400 mb-4 flex items-center justify-center text-white">
+              <ArrowRight size={16} />
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  );
-  
-  // Modal para ingresar el código secreto
-  const CodigoSecretoModal = () => (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4">
-        <h3 className="text-xl font-bold text-purple-800 mb-4">Ingresar Código Secreto</h3>
-        <p className="text-sm text-gray-600 mb-4">Encuentra códigos secretos en tu cartilla física y desbloquea contenido especial, insignias y puntos extra.</p>
-        
-        <input
-          type="text"
-          placeholder="Escribe el código aquí..."
-          className="w-full p-3 border border-purple-200 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-purple-500"
-          value={codigoInput}
-          onChange={(e) => setCodigoInput(e.target.value)}
-        />
-        
-        <div className="flex justify-end space-x-3">
-          <button 
-            onClick={() => setMostrarCodigoModal(false)}
-            className="py-2 px-4 border border-purple-200 text-purple-600 rounded-lg hover:bg-purple-50"
-          >
-            Cancelar
-          </button>
-          <button 
-            onClick={manejarCodigoSecreto}
-            className="py-2 px-4 bg-purple-500 text-white rounded-lg hover:bg-purple-600"
-          >
-            Verificar
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-  
-  // Componente principal
-  return (
-    <div className="flex h-screen bg-purple-50 text-gray-800">
-      <MenuLateral />
-      
-      <div className="flex-1 flex flex-col overflow-auto">
-        <Cabecera />
-        
-        <main className="flex-1 overflow-auto">
-          {seccionActual === 'zona-aprendizaje' && <ZonaAprendizaje />}
-          {seccionActual === 'cursos' && <Cursos />}
-          {seccionActual === 'retos' && <Retos />}
-          {seccionActual === 'foros' && <Foros />}
-          {seccionActual === 'insignias' && <Insignias />}
-        </main>
-      </div>
-      
-      {/* Drawer de perfil (simplificado) */}
-      {perfilDrawer && (
-        <div className="fixed right-0 top-0 h-screen bg-white shadow-lg w-80 p-6 z-40">
-          <div className="flex justify-between items-center mb-6">
-            <h3 className="text-lg font-bold text-purple-800">Mi Perfil</h3>
-            <button 
-              onClick={() => setPerfilDrawer(false)}
-              className="text-gray-500 hover:text-gray-700"
-            >
-              &times;
-            </button>
-          </div>
-          
-          <div className="text-center mb-6">
-            <div className="text-6xl mb-3">{usuario.avatar}</div>
-            <h4 className="font-bold text-purple-800 text-lg">{usuario.nombre}</h4>
-            <p className="text-sm text-gray-600">Nivel {usuario.nivel} · {usuario.puntos} puntos</p>
-            <button className="mt-2 text-sm text-purple-600 hover:text-purple-800">
-              Personalizar avatar
-            </button>
-          </div>
-          
-          <button className="w-full py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 mb-4">
-            Editar perfil
-          </button>
-          
-          <button className="w-full py-2 border border-purple-200 text-purple-600 rounded-lg hover:bg-purple-50">
-            Cerrar sesión
-          </button>
-        </div>
-      )}
-      
-      {/* Modal de código secreto */}
-      {mostrarCodigoModal && <CodigoSecretoModal />}
     </div>
   );
 };
 
-export default PlataformaEducativa;
+export default PandoraLogin;
